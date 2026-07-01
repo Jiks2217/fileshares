@@ -56,7 +56,7 @@ ROOT_URLCONF = 'fileshares.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [BASE_DIR / 'templates'],  # global templates directory
+        'DIRS': [],  # global templates directory
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
