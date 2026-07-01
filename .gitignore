@@ -1,0 +1,52 @@
+# Python
+*.pyc
+__pycache__/
+*.pyo
+*.pyd
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+develop-eggs/
+downloads/
+eggs/
+.eggs/
+parts/
+sdist/
+var/
+wheels/
+*.manifest
+*.spec
+
+# Virtual environment
+venv/
+env/
+ENV/
+.venv
+
+# Django
+*.log
+*.pot
+*.py.bak
+local_settings.py
+db.sqlite3
+media/
+staticfiles/
+
+# Secret / local data
+.env
+*.env
+.secrets
+credentials.json
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*.swo~
+
+# OS
+.DS_Store
+Thumbs.db

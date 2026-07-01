@@ -1,0 +1,170 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Upload Document — PatentVault</title>
+  <link rel="stylesheet" href="{% static 'css/style.css' %}" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+</head>
+<body>
+
+  <header class="site-header">
+    <div class="header-inner">
+      <a href="{% url 'documents:upload' %}" class="logo">
+        <span class="logo-mark">⬡</span>
+        <span class="logo-text">PatentVault</span>
+      </a>
+      <nav class="site-nav">
+        <a href="{% url 'documents:upload' %}" class="nav-link active">Upload</a>
+        <a href="{% url 'documents:retrieve' %}" class="nav-link">Retrieve</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="page-main">
+    <div class="page-hero">
+      <p class="page-eyebrow">Secure Document Submission</p>
+      <h1 class="page-title">Upload your File or Document</h1>
+      <p class="page-subtitle">Your file is encrypted at rest and accessible only via a private access code issued at upload.</p>
+    </div>
+
+    <!-- Django messages -->
+    {% if messages %}
+      <div class="flash-group">
+        {% for message in messages %}
+          <div class="flash flash--{{ message.tags }}">
+            <span class="flash-icon">
+              {% if message.tags == 'error' %}✕{% else %}✓{% endif %}
+            </span>
+            {{ message }}
+          </div>
+        {% endfor %}
+      </div>
+    {% endif %}
+
+    <!-- SUCCESS STATE -->
+    {% if success %}
+      <div class="success-card">
+        <div class="success-badge">Document Secured</div>
+        <h2 class="success-title">Upload Complete</h2>
+        <p class="success-body">
+          <strong>{{ original_filename }}</strong> has been stored securely.
+          Your private access code is shown below. <em>Store it in a safe place — it cannot be recovered.</em>
+        </p>
+        <div class="code-block">
+          <p class="code-label">Access Code</p>
+          <p class="code-value" id="accessCode">{{ access_code }}</p>
+          <button class="btn-copy" onclick="copyCode()">Copy</button>
+        </div>
+        <div class="success-warning">
+          ⚠️ This code will <strong>not</strong> be displayed again. Anyone who holds this code can download the document.
+        </div>
+        <a href="{% url 'documents:upload' %}" class="btn btn--secondary">Upload Another Document</a>
+      </div>
+
+    <!-- UPLOAD FORM -->
+    {% else %}
+      <form class="upload-form" method="POST" action="{% url 'documents:upload' %}" enctype="multipart/form-data" novalidate>
+        {% csrf_token %}
+
+        <div class="form-row">
+          <div class="field">
+            <label class="field-label" for="{{ form.name.id_for_label }}">Full Name</label>
+            {{ form.name }}
+            {% if form.name.errors %}
+              <div class="field-error">{{ form.name.errors|join:", " }}</div>
+            {% endif %}
+          </div>
+          <div class="field">
+            <label class="field-label" for="{{ form.email.id_for_label }}">Email Address</label>
+            {{ form.email }}
+            {% if form.email.errors %}
+              <div class="field-error">{{ form.email.errors|join:", " }}</div>
+            {% endif %}
+          </div>
+        </div>
+
+        <div class="field">
+          <label class="field-label" for="{{ form.description.id_for_label }}">Document Description</label>
+          {{ form.description }}
+          {% if form.description.errors %}
+            <div class="field-error">{{ form.description.errors|join:", " }}</div>
+          {% endif %}
+        </div>
+
+        <div class="field">
+          <label class="field-label" for="{{ form.file.id_for_label }}">Document File</label>
+          <div class="file-drop" id="fileDrop">
+            {{ form.file }}
+            <div class="file-drop-inner">
+              <span class="file-drop-icon">⬆</span>
+              <p class="file-drop-text">Drag &amp; drop your file here, or <span class="file-drop-link">browse</span></p>
+              <p class="file-drop-hint">PDF, Word, Excel, PowerPoint, images, archives — up to 1 GB</p>
+            </div>
+            <p class="file-name-display" id="fileNameDisplay"></p>
+          </div>
+          {% if form.file.errors %}
+            <div class="field-error">{{ form.file.errors|join:", " }}</div>
+          {% endif %}
+        </div>
+
+        <div class="form-actions">
+          <button class="btn btn--primary" type="submit">
+            <span>Secure &amp; Upload</span>
+            <span class="btn-arrow">→</span>
+          </button>
+        </div>
+
+      </form>
+    {% endif %}
+  </main>
+
+  <footer class="site-footer">
+    <p>PatentVault &copy; {% now "Y" %} — All transmissions are encrypted in transit.</p>
+  </footer>
+
+  <script>
+    // File drop label
+    const fileInput  = document.getElementById('{{ form.file.id_for_label }}');
+    const nameDisplay = document.getElementById('fileNameDisplay');
+    const dropZone   = document.getElementById('fileDrop');
+
+    if (fileInput) {
+      fileInput.addEventListener('change', () => {
+        if (fileInput.files.length) {
+          nameDisplay.textContent = '📄 ' + fileInput.files[0].name;
+        }
+      });
+    }
+
+    // Drag-over styling
+    if (dropZone) {
+      dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+      dropZone.addEventListener('dragleave',  () => dropZone.classList.remove('drag-over'));
+      dropZone.addEventListener('drop',       e => {
+        e.preventDefault();
+        dropZone.classList.remove('drag-over');
+        if (e.dataTransfer.files.length) {
+          fileInput.files = e.dataTransfer.files;
+          nameDisplay.textContent = '📄 ' + e.dataTransfer.files[0].name;
+        }
+      });
+    }
+
+    // Copy access code
+    function copyCode() {
+      const code = document.getElementById('accessCode');
+      navigator.clipboard.writeText(code.textContent).then(() => {
+        const btn = document.querySelector('.btn-copy');
+        btn.textContent = 'Copied!';
+        setTimeout(() => btn.textContent = 'Copy', 2000);
+      });
+    }
+  </script>
+
+</body>
+</html>

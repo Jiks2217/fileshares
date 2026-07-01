@@ -1,0 +1,124 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Retrieve Document — PatentVault</title>
+  <link rel="stylesheet" href="{% static 'css/style.css' %}" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+</head>
+<body>
+
+  <header class="site-header">
+    <div class="header-inner">
+      <a href="{% url 'documents:upload' %}" class="logo">
+        <span class="logo-mark">⬡</span>
+        <span class="logo-text">PatentVault</span>
+      </a>
+      <nav class="site-nav">
+        <a href="{% url 'documents:upload' %}" class="nav-link">Upload</a>
+        <a href="{% url 'documents:retrieve' %}" class="nav-link active">Retrieve</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="page-main">
+    <div class="page-hero">
+      <p class="page-eyebrow">Secure Document Retrieval</p>
+      <h1 class="page-title">Retrieve Your<br>Document</h1>
+      <p class="page-subtitle">Enter the 12-character access code you received at upload to locate and download your document.</p>
+    </div>
+
+    <!-- Django messages -->
+    {% if messages %}
+      <div class="flash-group">
+        {% for message in messages %}
+          <div class="flash flash--{{ message.tags }}">
+            <span class="flash-icon">
+              {% if message.tags == 'error' %}✕{% else %}✓{% endif %}
+            </span>
+            {{ message }}
+          </div>
+        {% endfor %}
+      </div>
+    {% endif %}
+
+    <!-- RETRIEVAL FORM -->
+    <form class="retrieve-form" method="POST" action="{% url 'documents:retrieve' %}" novalidate>
+      {% csrf_token %}
+      <div class="field field--centered">
+        <label class="field-label" for="access_code">Access Code</label>
+        <input
+          class="field-input field-input--mono field-input--large"
+          type="text"
+          id="access_code"
+          name="access_code"
+          placeholder="A7F9K2M8Q1XZ"
+          maxlength="12"
+          autocomplete="off"
+          spellcheck="false"
+          value="{{ access_code|default:'' }}"
+          required />
+        <p class="field-hint">12 uppercase letters and numbers, no spaces.</p>
+      </div>
+      <div class="form-actions form-actions--centered">
+        <button class="btn btn--primary" type="submit">
+          <span>Retrieve Document</span>
+          <span class="btn-arrow">→</span>
+        </button>
+      </div>
+    </form>
+
+    <!-- RESULT PANEL -->
+    {% if record %}
+      <div class="result-card">
+        <div class="result-header">
+          <span class="result-badge">Document Found</span>
+        </div>
+        <table class="result-table">
+          <tbody>
+            <tr>
+              <th>File Name</th>
+              <td>{{ record.original_filename }}</td>
+            </tr>
+            <tr>
+              <th>Description</th>
+              <td>{{ record.description }}</td>
+            </tr>
+            <tr>
+              <th>Upload Date</th>
+              <td>{{ record.upload_date|date:"d F Y \a\t H:i" }} UTC</td>
+            </tr>
+          </tbody>
+        </table>
+        <a
+          class="btn btn--download"
+          href="{% url 'documents:download' access_code=access_code %}">
+          ⬇ Download File
+        </a>
+      </div>
+    {% endif %}
+
+  </main>
+
+  <footer class="site-footer">
+    <p>PatentVault &copy; {% now "Y" %} — All transmissions are encrypted in transit.</p>
+  </footer>
+
+  <script>
+    // Auto-uppercase the access code field
+    const codeField = document.getElementById('access_code');
+    if (codeField) {
+      codeField.addEventListener('input', () => {
+        const pos = codeField.selectionStart;
+        codeField.value = codeField.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+        codeField.setSelectionRange(pos, pos);
+      });
+    }
+  </script>
+
+</body>
+</html>
